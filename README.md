@@ -7,6 +7,8 @@
 
 `cr` is a tool designed to help GitHub repos self-host their own chart repos by adding Helm chart artifacts to GitHub Releases named for the chart version and then creating an `index.yaml` file for those releases that can be hosted on GitHub Pages (or elsewhere!).
 
+At the moment I test changes to the original cr tool in order to use cr with the github pages out of the actions result. Basically I don't want to use the gh-pages branch and not save the index.yaml file in my repository.
+
 ## Installation
 
 ### Binaries (recommended)
