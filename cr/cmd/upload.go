@@ -15,10 +15,10 @@
 package cmd
 
 import (
-	"github.com/helm/chart-releaser/pkg/config"
-	"github.com/helm/chart-releaser/pkg/git"
-	"github.com/helm/chart-releaser/pkg/github"
-	"github.com/helm/chart-releaser/pkg/releaser"
+	"github.com/tklauenberg/chart-releaser/pkg/config"
+	"github.com/tklauenberg/chart-releaser/pkg/git"
+	"github.com/tklauenberg/chart-releaser/pkg/github"
+	"github.com/tklauenberg/chart-releaser/pkg/releaser"
 	"github.com/spf13/cobra"
 )
 

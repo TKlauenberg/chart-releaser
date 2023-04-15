@@ -28,8 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Songmu/retry"
-
 	"text/template"
 
 	"helm.sh/helm/v3/pkg/chart"
@@ -37,12 +35,12 @@ import (
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/chart/loader"
 
-	"github.com/helm/chart-releaser/pkg/config"
+	"github.com/tklauenberg/chart-releaser/pkg/config"
 
 	"helm.sh/helm/v3/pkg/provenance"
 	"helm.sh/helm/v3/pkg/repo"
 
-	"github.com/helm/chart-releaser/pkg/github"
+	"github.com/tklauenberg/chart-releaser/pkg/github"
 )
 
 // GitHub contains the functions necessary for interacting with GitHub release
@@ -50,6 +48,7 @@ import (
 type GitHub interface {
 	CreateRelease(ctx context.Context, input *github.Release) error
 	GetRelease(ctx context.Context, tag string) (*github.Release, error)
+	GetReleases(ctx context.Context) ([]*github.Release, error)
 	CreatePullRequest(owner string, repo string, message string, head string, base string) (string, error)
 }
 
@@ -96,80 +95,23 @@ func NewReleaser(config *config.Options, github GitHub, git Git) *Releaser {
 
 // UpdateIndexFile updates the index.yaml file for a given Git repo
 func (r *Releaser) UpdateIndexFile() (bool, error) {
-	// if index-path doesn't end with index.yaml we can try and fix it
-	if filepath.Base(r.config.IndexPath) != "index.yaml" {
-		// if path is a directory then add index.yaml
-		if stat, err := os.Stat(r.config.IndexPath); err == nil && stat.IsDir() {
-			r.config.IndexPath = filepath.Join(r.config.IndexPath, "index.yaml")
-			// otherwise error out
-		} else {
-			fmt.Printf("index-path (%s) should be a directory or a file called index.yaml\n", r.config.IndexPath)
-			os.Exit(1)
-		}
-	}
+	var worktree = ""
+	indexYamlPath := filepath.Join(worktree, "index.yaml")
 
-	fmt.Printf("Loading index file from git repository %s\n", r.config.IndexPath)
-	worktree, err := r.git.AddWorktree("", r.config.Remote+"/"+r.config.PagesBranch)
+	var indexFile = repo.NewIndexFile()
+
+	releases, err := r.github.GetReleases(context.TODO())
+
 	if err != nil {
 		return false, err
 	}
-	defer r.git.RemoveWorktree("", worktree) // nolint: errcheck
 
-	// if pages-index-path doesn't end with index.yaml we can try and fix it
-	if filepath.Base(r.config.PagesIndexPath) != "index.yaml" {
-		// if path is a directory then add index.yaml
-		if stat, err := os.Stat(filepath.Join(worktree, r.config.PagesIndexPath)); err == nil && stat.IsDir() {
-			r.config.PagesIndexPath = filepath.Join(r.config.PagesIndexPath, "index.yaml")
-			// otherwise error out
-		} else {
-			fmt.Printf("pages-index-path (%s) should be a directory or a file called index.yaml\n", r.config.PagesIndexPath)
-			os.Exit(1) // nolint: gocritic
-		}
-	}
-	indexYamlPath := filepath.Join(worktree, r.config.PagesIndexPath)
-
-	var indexFile *repo.IndexFile
-	_, err = os.Stat(indexYamlPath)
-	if err == nil { // nolint: gocritic
-		indexFile, err = repo.LoadIndexFile(indexYamlPath)
-		if err != nil {
-			return false, err
-		}
-	} else if errors.Is(err, os.ErrNotExist) {
-		indexFile = repo.NewIndexFile()
-	} else {
-		return false, err
-	}
-
-	// We have to explicitly glob for *.tgz files only. If GPG signing is enabled,
-	// this would also return *.tgz.prov files otherwise, which we don't want here.
-	chartPackages, err := filepath.Glob(r.config.PackagePath + "/*.tgz")
-	if err != nil {
-		return false, err
+	for _, release := range releases {
+		fmt.Printf("Found Release: %s", release.Name)
 	}
 
 	var update bool
-	for _, chartPackage := range chartPackages {
-		ch, err := loader.LoadFile(chartPackage)
-		if err != nil {
-			return false, err
-		}
-		releaseName, err := r.computeReleaseName(ch)
-		if err != nil {
-			return false, err
-		}
-
-		var release *github.Release
-		if err := retry.Retry(3, 3*time.Second, func() error {
-			rel, err := r.github.GetRelease(context.TODO(), releaseName)
-			if err != nil {
-				return err
-			}
-			release = rel
-			return nil
-		}); err != nil {
-			return false, err
-		}
+	for _, release := range releases {
 
 		for _, asset := range release.Assets {
 			downloadURL, _ := url.Parse(asset.URL)

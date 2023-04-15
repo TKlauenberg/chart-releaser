@@ -102,6 +102,40 @@ func (c *Client) GetRelease(ctx context.Context, tag string) (*Release, error) {
 	return result, nil
 }
 
+func (c *Client) GetReleases(ctx context.Context) ([]*Release, error) {
+	// Set up the list options to retrieve the maximum number of releases in a single request
+	opts := &github.ListOptions{PerPage: 100}
+	// Retrieve the first page of releases
+	releases, resp, err := c.Repositories.ListReleases(ctx, c.owner, c.repo, opts)
+	if err != nil {
+			return nil, err
+	}
+
+	// Check if there are more releases available and fetch them if so
+	for resp.NextPage != 0 {
+		opts.Page = resp.NextPage
+		additionalReleases, nextResp, err := c.Repositories.ListReleases(ctx, c.owner, c.repo, opts)
+		if err != nil {
+				return nil, err
+		}
+		releases = append(releases, additionalReleases...)
+		resp = nextResp
+	}
+
+	result := []*Release{}
+	for _, release := range releases {
+		resultRel := &Release{
+			Assets: []*Asset{},
+		}
+		for _, ass := range release.Assets {
+			asset := &Asset{*ass.Name, *ass.BrowserDownloadURL}
+			resultRel.Assets = append(resultRel.Assets, asset)
+		}
+		result = append(result, resultRel)
+	}
+	return result, nil
+}
+
 // CreateRelease creates a new release object in the GitHub API
 func (c *Client) CreateRelease(ctx context.Context, input *Release) error {
 	req := &github.RepositoryRelease{

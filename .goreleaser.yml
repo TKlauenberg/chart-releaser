@@ -22,7 +22,7 @@ builds:
       - s390x
       - ppc64le
     goarm:
-      - 7
+      - "7"
     goos:
       - linux
       - darwin
@@ -36,9 +36,9 @@ builds:
         goarch: ppc64le
     ldflags:
       - >-
-        -X github.com/helm/chart-releaser/cr/cmd.Version={{ .Tag }}
-        -X github.com/helm/chart-releaser/cr/cmd.GitCommit={{ .Commit }}
-        -X github.com/helm/chart-releaser/cr/cmd.BuildDate={{ .Date }}
+        -X github.com/tklauenberg/chart-releaser/cr/cmd.Version={{ .Tag }}
+        -X github.com/tklauenberg/chart-releaser/cr/cmd.GitCommit={{ .Commit }}
+        -X github.com/tklauenberg/chart-releaser/cr/cmd.BuildDate={{ .Date }}
 
 archives:
   - rlcp: true
@@ -179,7 +179,7 @@ brews:
       name: helm-bot
       email: helm-bot@users.noreply.github.com
     folder: Formula
-    homepage: https://github.com/helm/chart-releaser/
+    homepage: https://github.com/tklauenberg/chart-releaser/
     description: Hosting Helm Charts via GitHub Pages and Releases
     install: |
       bin.install "cr"

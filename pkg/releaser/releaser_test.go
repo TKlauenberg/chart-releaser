@@ -21,13 +21,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/helm/chart-releaser/pkg/github"
+	"github.com/tklauenberg/chart-releaser/pkg/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"helm.sh/helm/v3/pkg/provenance"
 	"helm.sh/helm/v3/pkg/repo"
 
-	"github.com/helm/chart-releaser/pkg/config"
+	"github.com/tklauenberg/chart-releaser/pkg/config"
 )
 
 type FakeGitHub struct {
@@ -93,6 +93,25 @@ func (f *FakeGitHub) GetRelease(ctx context.Context, tag string) (*github.Releas
 		},
 	}
 	return release, nil
+}
+
+func (f *FakeGitHub) GetReleases(ctx context.Context) ([]*github.Release, error) {
+	releases := []*github.Release{
+		{
+			Name:        "testdata/release-packages/test-chart-0.1.0",
+			Description: "A Helm chart for Kubernetes",
+			Assets: []*github.Asset{
+				{
+					Path: "testdata/release-packages/test-chart-0.1.0.tgz",
+					URL:  "https://myrepo/charts/test-chart-0.1.0.tgz",
+				},
+				{
+					Path: "testdata/release-packages/third-party-file-0.1.0.txt",
+					URL:  "https://myrepo/charts/third-party-file-0.1.0.txt",
+				},
+			},
+		}}
+	return releases, nil
 }
 
 func (f *FakeGitHub) CreatePullRequest(owner string, repo string, message string, head string, base string) (string, error) {

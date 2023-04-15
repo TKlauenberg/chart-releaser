@@ -1,4 +1,4 @@
-module github.com/helm/chart-releaser
+module github.com/tklauenberg/chart-releaser
 
 go 1.20
 
