@@ -25,8 +25,8 @@ import (
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 
-	"github.com/tklauenberg/chart-releaser/pkg/config"
 	"github.com/mitchellh/go-homedir"
+	"github.com/tklauenberg/chart-releaser/pkg/config"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/registry"
 )

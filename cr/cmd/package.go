@@ -15,9 +15,9 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
 	"github.com/tklauenberg/chart-releaser/pkg/config"
 	"github.com/tklauenberg/chart-releaser/pkg/packager"
-	"github.com/spf13/cobra"
 )
 
 // packageCmd represents the package command
