@@ -108,7 +108,7 @@ func (c *Client) GetReleases(ctx context.Context) ([]*Release, error) {
 	// Retrieve the first page of releases
 	releases, resp, err := c.Repositories.ListReleases(ctx, c.owner, c.repo, opts)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	// Check if there are more releases available and fetch them if so
@@ -116,7 +116,7 @@ func (c *Client) GetReleases(ctx context.Context) ([]*Release, error) {
 		opts.Page = resp.NextPage
 		additionalReleases, nextResp, err := c.Repositories.ListReleases(ctx, c.owner, c.repo, opts)
 		if err != nil {
-				return nil, err
+			return nil, err
 		}
 		releases = append(releases, additionalReleases...)
 		resp = nextResp
