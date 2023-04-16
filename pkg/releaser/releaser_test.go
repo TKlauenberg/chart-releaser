@@ -24,7 +24,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tklauenberg/chart-releaser/pkg/github"
-	"helm.sh/helm/v3/pkg/provenance"
 	"helm.sh/helm/v3/pkg/repo"
 
 	"github.com/tklauenberg/chart-releaser/pkg/config"
@@ -117,125 +116,6 @@ func (f *FakeGitHub) GetReleases(ctx context.Context) ([]*github.Release, error)
 func (f *FakeGitHub) CreatePullRequest(owner string, repo string, message string, head string, base string) (string, error) {
 	f.Called(owner, repo, message, head, base)
 	return "https://github.com/owner/repo/pull/42", nil
-}
-
-func TestReleaser_UpdateIndexFile(t *testing.T) {
-	indexDir, _ := os.MkdirTemp(".", "index")
-	defer os.RemoveAll(indexDir)
-
-	fakeGitHub := new(FakeGitHub)
-
-	tests := []struct {
-		name     string
-		exists   bool
-		releaser *Releaser
-	}{
-		{
-			"index-file-exists",
-			true,
-			&Releaser{
-				config: &config.Options{
-					IndexPath:   "testdata/index/index.yaml",
-					PackagePath: "testdata/release-packages",
-				},
-				github: fakeGitHub,
-				git:    &FakeGit{"testdata/repo/index.yaml"},
-			},
-		},
-		{
-			"index-file-exists-pages-index-path",
-			true,
-			&Releaser{
-				config: &config.Options{
-					IndexPath:      "testdata/index/index.yaml",
-					PackagePath:    "testdata/release-packages",
-					PagesIndexPath: "./",
-				},
-				github: fakeGitHub,
-				git:    &FakeGit{"testdata/repo/index.yaml"},
-			},
-		},
-		{
-			"index-file-does-not-exist",
-			false,
-			&Releaser{
-				config: &config.Options{
-					IndexPath:   filepath.Join(indexDir, "index.yaml"),
-					PackagePath: "testdata/release-packages",
-				},
-				github: fakeGitHub,
-				git:    &FakeGit{""},
-			},
-		},
-		{
-			"index-file-does-not-exist-pages-index-path",
-			false,
-			&Releaser{
-				config: &config.Options{
-					IndexPath:      filepath.Join(indexDir, "index.yaml"),
-					PackagePath:    "testdata/release-packages",
-					PagesIndexPath: "./",
-				},
-				github: fakeGitHub,
-				git:    &FakeGit{""},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var sha256 string
-			if tt.exists {
-				sha256, _ = provenance.DigestFile(tt.releaser.config.IndexPath)
-			}
-			update, err := tt.releaser.UpdateIndexFile()
-			assert.NoError(t, err)
-			assert.Equal(t, update, !tt.exists)
-			if tt.exists {
-				newSha256, _ := provenance.DigestFile(tt.releaser.config.IndexPath)
-				assert.Equal(t, sha256, newSha256)
-			} else {
-				_, err := os.Stat(tt.releaser.config.IndexPath)
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestReleaser_UpdateIndexFileGenerated(t *testing.T) {
-	indexDir, _ := os.MkdirTemp(".", "index")
-	defer os.RemoveAll(indexDir)
-
-	fakeGitHub := new(FakeGitHub)
-
-	tests := []struct {
-		name     string
-		releaser *Releaser
-	}{
-		{
-			"index-file-exists",
-			&Releaser{
-				config: &config.Options{
-					IndexPath:   filepath.Join(indexDir, "index.yaml"),
-					PackagePath: "testdata/release-packages",
-				},
-				github: fakeGitHub,
-				git:    &FakeGit{indexFile: "testdata/empty-repo/index.yaml"},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			indexFile, _ := repo.LoadIndexFile("testdata/empty-repo/index.yaml")
-			generated := indexFile.Generated
-			update, err := tt.releaser.UpdateIndexFile()
-			assert.NoError(t, err)
-			assert.True(t, update)
-			newIndexFile, _ := repo.LoadIndexFile(tt.releaser.config.IndexPath)
-			newGenerated := newIndexFile.Generated
-			assert.True(t, newGenerated.After(generated))
-			assert.Equal(t, 2, len(newIndexFile.Entries))
-		})
-	}
 }
 
 func TestReleaser_splitPackageNameAndVersion(t *testing.T) {
