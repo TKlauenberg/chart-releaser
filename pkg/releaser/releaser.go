@@ -112,7 +112,6 @@ func (r *Releaser) UpdateIndexFile() (bool, error) {
 
 	var update bool
 	for _, release := range releases {
-
 		for _, asset := range release.Assets {
 			downloadURL, _ := url.Parse(asset.URL)
 			name := filepath.Base(downloadURL.Path)

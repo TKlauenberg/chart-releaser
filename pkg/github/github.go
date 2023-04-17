@@ -87,7 +87,7 @@ func NewClient(owner, repo, token, baseURL, uploadURL string) *Client {
 // GetRelease queries the GitHub API for a specified release object
 func (c *Client) GetRelease(ctx context.Context, tag string) (*Release, error) {
 	// Check Release whether already exists or not
-	release, _, err := c.Repositories.GetReleaseByTag(context.TODO(), c.owner, c.repo, tag)
+	release, _, err := c.Repositories.GetReleaseByTag(ctx, c.owner, c.repo, tag)
 	if err != nil {
 		return nil, err
 	}
@@ -147,13 +147,13 @@ func (c *Client) CreateRelease(ctx context.Context, input *Release) error {
 		MakeLatest:           &input.MakeLatest,
 	}
 
-	release, _, err := c.Repositories.CreateRelease(context.TODO(), c.owner, c.repo, req)
+	release, _, err := c.Repositories.CreateRelease(ctx, c.owner, c.repo, req)
 	if err != nil {
 		return err
 	}
 
 	for _, asset := range input.Assets {
-		if err := c.uploadReleaseAsset(context.TODO(), *release.ID, asset.Path); err != nil {
+		if err := c.uploadReleaseAsset(ctx, *release.ID, asset.Path); err != nil {
 			return err
 		}
 	}
