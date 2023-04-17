@@ -137,5 +137,5 @@ func Release() error {
 		return err
 	}
 
-	return sh.RunV("goreleaser", "release", "--rm-dist")
+	return sh.RunV("goreleaser", "release", "--clean")
 }
