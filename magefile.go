@@ -110,7 +110,7 @@ func Test() error {
 }
 
 func Build() error {
-	return sh.RunV("goreleaser", "release", "--rm-dist", "--snapshot", "--skip-sign")
+	return sh.RunV("goreleaser", "release", "--clean", "--snapshot", "--skip-sign")
 }
 
 func CI() error {
