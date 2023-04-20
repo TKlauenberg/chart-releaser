@@ -178,18 +178,3 @@ docker_signs:
     cmd: cosign
     args: ["sign", "${artifact}"]
     artifacts: manifests
-
-brews:
-  - tap:
-      owner: helm
-      name: homebrew-tap
-    commit_author:
-      name: helm-bot
-      email: helm-bot@users.noreply.github.com
-    folder: Formula
-    homepage: https://github.com/tklauenberg/chart-releaser/
-    description: Hosting Helm Charts via GitHub Pages and Releases
-    install: |
-      bin.install "cr"
-    test: |
-      system "#{bin}/cr version"
