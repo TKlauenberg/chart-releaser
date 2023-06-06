@@ -141,7 +141,7 @@ func (r *Releaser) UpdateIndexFile() (bool, error) {
 	// Create the directory if it doesn't exist
 	err = os.MkdirAll(filepath.Dir(r.config.IndexPath), os.ModePerm)
 	if err != nil {
-		return false, fmt.Errorf("error creating directory: %v", err)
+		return false, fmt.Errorf("error creating directory: %w", err)
 	}
 
 	fmt.Printf("Updating index %s\n", r.config.IndexPath)
@@ -233,7 +233,7 @@ func (r *Releaser) DownloadFile(url string) (string, error) {
 	// Create the directory if it doesn't exist
 	err := os.MkdirAll(r.config.PackagePath, os.ModePerm)
 	if err != nil {
-		return "", fmt.Errorf("error creating directory: %v", err)
+		return "", fmt.Errorf("error creating directory: %w", err)
 	}
 
 	// Check if the file already exists
@@ -245,14 +245,14 @@ func (r *Releaser) DownloadFile(url string) (string, error) {
 	// Create the output file
 	file, err := os.Create(filePath)
 	if err != nil {
-		return "", fmt.Errorf("error creating file: %v", err)
+		return "", fmt.Errorf("error creating file: %w", err)
 	}
 	defer file.Close()
 
 	// Send an HTTP GET request
 	response, err := http.Get(url)
 	if err != nil {
-		return "", fmt.Errorf("error sending request: %v", err)
+		return "", fmt.Errorf("error sending request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -264,7 +264,7 @@ func (r *Releaser) DownloadFile(url string) (string, error) {
 	// Copy the response body to the file
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
-		return "", fmt.Errorf("error saving file: %v", err)
+		return "", fmt.Errorf("error saving file: %w", err)
 	}
 
 	return filePath, nil
@@ -297,10 +297,7 @@ func (r *Releaser) addToIndexFile(indexFile *repo.IndexFile, url string) error {
 	s = s[:len(s)-1]
 
 	// Add to index
-	if err := indexFile.MustAdd(c.Metadata, filepath.Base(arch), strings.Join(s, "/"), hash); err != nil {
-		return err
-	}
-	return nil
+	return indexFile.MustAdd(c.Metadata, filepath.Base(arch), strings.Join(s, "/"), hash)
 }
 
 // CreateReleases finds and uploads Helm chart packages to GitHub
