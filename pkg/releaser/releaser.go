@@ -133,9 +133,17 @@ func (r *Releaser) UpdateIndexFile() (bool, error) {
 		}
 	}
 
+
+
 	if !update {
 		fmt.Printf("Index %s did not change\n", r.config.IndexPath)
 		return false, nil
+	}
+
+	// Create the directory if it doesn't exist
+	err = os.MkdirAll(filepath.Dir(r.config.IndexPath), os.ModePerm)
+	if err != nil {
+		return false, fmt.Errorf("error creating directory: %v", err)
 	}
 
 	fmt.Printf("Updating index %s\n", r.config.IndexPath)
@@ -221,8 +229,55 @@ func (r *Releaser) splitPackageNameAndVersion(pkg string) []string {
 	return []string{pkg[0:delimIndex], pkg[delimIndex+1:]}
 }
 
+func (r *Releaser) DownloadFile(url string) (string, error) {
+	filePath := filepath.Join(r.config.PackagePath, filepath.Base(url))
+
+	// Create the directory if it doesn't exist
+	err := os.MkdirAll(r.config.PackagePath, os.ModePerm)
+	if err != nil {
+		return "", fmt.Errorf("error creating directory: %v", err)
+	}
+
+	// Check if the file already exists
+	if _, err := os.Stat(filePath); err == nil {
+		fmt.Println("File already exists:", filePath)
+		return filePath, nil
+	}
+
+	// Create the output file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("error creating file: %v", err)
+	}
+	defer file.Close()
+
+	// Send an HTTP GET request
+	response, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("error sending request: %v", err)
+	}
+	defer response.Body.Close()
+
+	// Check if the response was successful
+	if response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error response: %s", response.Status)
+	}
+
+	// Copy the response body to the file
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		return "", fmt.Errorf("error saving file: %v", err)
+	}
+
+	return filePath, nil
+}
+
 func (r *Releaser) addToIndexFile(indexFile *repo.IndexFile, url string) error {
-	arch := filepath.Join(r.config.PackagePath, filepath.Base(url))
+	arch, err := r.DownloadFile(url)
+
+	if err != nil {
+		return errors.Wrapf(err, "err in download")
+	}
 
 	// extract chart metadata
 	fmt.Printf("Extracting chart metadata from %s\n", arch)
