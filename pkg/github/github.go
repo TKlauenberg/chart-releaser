@@ -153,7 +153,7 @@ func (c *Client) CreateRelease(ctx context.Context, input *Release) error {
 	}
 
 	for _, asset := range input.Assets {
-		if err := c.uploadReleaseAsset(ctx, *release.ID, asset.Path); err != nil {
+		if err := c.uploadReleaseAsset(*release.ID, asset.Path); err != nil {
 			return err
 		}
 	}
@@ -184,7 +184,7 @@ func (c *Client) CreatePullRequest(owner string, repo string, message string, he
 }
 
 // UploadAsset uploads specified assets to a given release object
-func (c *Client) uploadReleaseAsset(ctx context.Context, releaseID int64, filename string) error {
+func (c *Client) uploadReleaseAsset(releaseID int64, filename string) error {
 	filename, err := filepath.Abs(filename)
 	if err != nil {
 		return errors.Wrap(err, "failed to get abs path")
@@ -195,7 +195,7 @@ func (c *Client) uploadReleaseAsset(ctx context.Context, releaseID int64, filena
 		Name: filepath.Base(filename),
 	}
 
-	if err := retry.Retry(3, 3*time.Second, func() error {
+	return retry.Retry(3, 3*time.Second, func() error {
 		f, err := os.Open(filename)
 		if err != nil {
 			return errors.Wrap(err, "failed to open file")
@@ -205,9 +205,5 @@ func (c *Client) uploadReleaseAsset(ctx context.Context, releaseID int64, filena
 			return errors.Wrapf(err, "failed to upload release asset: %s", filename)
 		}
 		return nil
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }

@@ -227,8 +227,8 @@ func (r *Releaser) splitPackageNameAndVersion(pkg string) []string {
 	return []string{pkg[0:delimIndex], pkg[delimIndex+1:]}
 }
 
-func (r *Releaser) DownloadFile(url string) (string, error) {
-	filePath := filepath.Join(r.config.PackagePath, filepath.Base(url))
+func (r *Releaser) DownloadFile(urlStr string) (string, error) {
+	filePath := filepath.Join(r.config.PackagePath, filepath.Base(urlStr))
 
 	// Create the directory if it doesn't exist
 	err := os.MkdirAll(r.config.PackagePath, os.ModePerm)
@@ -249,8 +249,14 @@ func (r *Releaser) DownloadFile(url string) (string, error) {
 	}
 	defer file.Close()
 
+	// Validate and parse the URL
+	parsedURL, err := url.ParseRequestURI(urlStr)
+	if err != nil {
+		return "", fmt.Errorf("invalid URL: %w", err)
+	}
+
 	// Send an HTTP GET request
-	response, err := http.Get(url)
+	response, err := http.Get(parsedURL.String())
 	if err != nil {
 		return "", fmt.Errorf("error sending request: %w", err)
 	}
