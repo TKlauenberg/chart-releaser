@@ -133,8 +133,6 @@ func (r *Releaser) UpdateIndexFile() (bool, error) {
 		}
 	}
 
-
-
 	if !update {
 		fmt.Printf("Index %s did not change\n", r.config.IndexPath)
 		return false, nil
