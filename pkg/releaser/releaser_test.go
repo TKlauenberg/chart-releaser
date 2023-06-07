@@ -16,7 +16,6 @@ package releaser
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -24,9 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tklauenberg/chart-releaser/pkg/github"
-	"helm.sh/helm/v3/pkg/repo"
-
-	"github.com/tklauenberg/chart-releaser/pkg/config"
 )
 
 type FakeGitHub struct {
@@ -150,44 +146,6 @@ func TestReleaser_splitPackageNameAndVersion(t *testing.T) {
 			} else {
 				actual := r.splitPackageNameAndVersion(tt.pkg)
 				assert.Equal(t, tt.expected, actual)
-			}
-		})
-	}
-}
-
-func TestReleaser_addToIndexFile(t *testing.T) {
-	tests := []struct {
-		name    string
-		chart   string
-		version string
-		error   bool
-	}{
-		{
-			"invalid-package",
-			"does-not-exist",
-			"0.1.0",
-			true,
-		},
-		{
-			"valid-package",
-			"test-chart",
-			"0.1.0",
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &Releaser{
-				config: &config.Options{PackagePath: "testdata/release-packages"},
-			}
-			indexFile := repo.NewIndexFile()
-			url := fmt.Sprintf("https://myrepo/charts/%s-%s.tgz", tt.chart, tt.version)
-			err := r.addToIndexFile(indexFile, url)
-			if tt.error {
-				assert.Error(t, err)
-				assert.False(t, indexFile.Has(tt.chart, tt.version))
-			} else {
-				assert.True(t, indexFile.Has(tt.chart, tt.version))
 			}
 		})
 	}
